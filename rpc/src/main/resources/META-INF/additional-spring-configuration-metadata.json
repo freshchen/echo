@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "rpc.client.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "是否开启 rpc client 端自动配置"
+    }
+  ]
+}
