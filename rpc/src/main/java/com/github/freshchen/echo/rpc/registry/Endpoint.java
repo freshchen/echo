@@ -1,8 +1,8 @@
-package com.github.freshchen.echo.rpc.common.model;
+package com.github.freshchen.echo.rpc.registry;
 
 import com.github.freshchen.echo.rpc.common.util.Asserts;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -14,7 +14,7 @@ import static com.github.freshchen.echo.rpc.common.constant.RpcConstants.COLON;
  * @since 2022/04/10
  **/
 @Getter
-@Setter
+@Builder
 public class Endpoint {
 
     private String ip;

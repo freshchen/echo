@@ -1,15 +1,19 @@
-package com.github.freshchen.echo.rpc.client;
+package com.github.freshchen.echo.rpc.client.annotation;
 
-import com.github.freshchen.echo.rpc.client.annotation.RpcReference;
 import com.github.freshchen.echo.rpc.common.model.RpcException;
+import com.github.freshchen.echo.rpc.common.util.Asserts;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.PropertyValues;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.beans.factory.config.SmartInstantiationAwareBeanPostProcessor;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.MergedBeanDefinitionPostProcessor;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.core.BridgeMethodResolver;
@@ -18,7 +22,6 @@ import org.springframework.core.PriorityOrdered;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -29,23 +32,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.github.freshchen.echo.rpc.common.constant.RpcConstants.COLON;
+
 /**
  * @author darcy
  * @since 2022/04/10
  **/
 @Slf4j
-public class RpcReferenceHandler implements SmartInstantiationAwareBeanPostProcessor,
+public class RpcReferencePostProcessor implements SmartInstantiationAwareBeanPostProcessor,
         MergedBeanDefinitionPostProcessor,
         BeanFactoryAware,
         PriorityOrdered {
 
     private final Map<String, InjectionMetadata> injectionMetadataCache = new ConcurrentHashMap<>(32);
 
-    private BeanFactory beanFactory;
+    private DefaultListableBeanFactory beanFactory;
 
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-        this.beanFactory = beanFactory;
+        this.beanFactory = (DefaultListableBeanFactory) beanFactory;
     }
 
     @Override
@@ -68,7 +73,7 @@ public class RpcReferenceHandler implements SmartInstantiationAwareBeanPostProce
     }
 
     private InjectionMetadata findRpcReferenceMetadata(String beanName, Class<?> clazz, PropertyValues pvs) {
-        String cacheKey = (StringUtils.hasLength(beanName) ? beanName : clazz.getName());
+        String cacheKey = (StringUtils.isNotBlank(beanName) ? beanName : clazz.getName());
         InjectionMetadata metadata = this.injectionMetadataCache.get(cacheKey);
         if (InjectionMetadata.needsRefresh(metadata, clazz)) {
             synchronized (this.injectionMetadataCache) {
@@ -101,7 +106,7 @@ public class RpcReferenceHandler implements SmartInstantiationAwareBeanPostProce
                         }
                         return;
                     }
-                    currElements.add(new RpcReferenceFieldElement(field, rpcReference));
+                    currElements.add(new RpcReferenceFieldElement(field, rpcReference, beanFactory));
                 }
             });
 
@@ -141,7 +146,7 @@ public class RpcReferenceHandler implements SmartInstantiationAwareBeanPostProce
         return Ordered.LOWEST_PRECEDENCE;
     }
 
-    private class RpcReferenceMethodElement extends InjectionMetadata.InjectedElement {
+    private static class RpcReferenceMethodElement extends InjectionMetadata.InjectedElement {
 
         private final Annotation annotation;
 
@@ -157,19 +162,71 @@ public class RpcReferenceHandler implements SmartInstantiationAwareBeanPostProce
 
     }
 
-    private class RpcReferenceFieldElement extends InjectionMetadata.InjectedElement {
+    private static class RpcReferenceFieldElement extends InjectionMetadata.InjectedElement {
 
         private final Annotation annotation;
+        private final DefaultListableBeanFactory beanFactory;
 
-        protected RpcReferenceFieldElement(Field member, Annotation annotation) {
+        protected RpcReferenceFieldElement(Field member, Annotation annotation, DefaultListableBeanFactory beanFactory) {
             super(member, null);
             this.annotation = annotation;
+            this.beanFactory = beanFactory;
         }
 
         @Override
-        protected void inject(Object target, String requestingBeanName, PropertyValues pvs) throws Throwable {
-            super.inject(target, requestingBeanName, pvs);
+        protected void inject(Object bean, String requestingBeanName, PropertyValues pvs) throws Throwable {
+            Field field = (Field) this.member;
+            try {
+                ReflectionUtils.makeAccessible(field);
+                Object value = field.get(bean);
+                if (annotation instanceof RpcReference) {
+                    Class<?> type = field.getType();
+                    Asserts.isTrue(type.isInterface(), type + " is not a interface");
+                    RpcReference rpcReference = (RpcReference) this.annotation;
+                    String beanName = getBeanName(rpcReference, type);
+                    try {
+                        value = beanFactory.getBean(beanName);
+                    } catch (NoSuchBeanDefinitionException ex) {
+                        // continue the following logic to create new factory bean
+                    }
+                    if (value == null) {
+                        value = createRpcReferenceBean(rpcReference, type, beanFactory);
+                    }
+                }
+                if (value != null) {
+                    ReflectionUtils.makeAccessible(field);
+                    field.set(bean, value);
+                }
+            } catch (Throwable ex) {
+                throw new RpcException("Could not inject field: " + field, ex);
+            }
         }
     }
+
+    private static String getBeanName(RpcReference rpcReference, Class<?> type) {
+        String applicationName = rpcReference.applicationName();
+        String id = rpcReference.id();
+        if (StringUtils.isNoneBlank(applicationName, id)) {
+            return applicationName + COLON + id;
+        }
+        Asserts.isTrue(type.isInterface(), type + " is not a interface");
+        return type.getName();
+    }
+
+    private static Object createRpcReferenceBean(RpcReference rpcReference,
+                                                 Class<?> serviceInterface,
+                                                 DefaultListableBeanFactory beanFactory) {
+        RootBeanDefinition definition = new RootBeanDefinition();
+        definition.setBeanClass(RpcReferenceBean.class);
+        String beanName = getBeanName(rpcReference, serviceInterface);
+        MutablePropertyValues values = new MutablePropertyValues();
+        values.addPropertyValue("interfaceClass", serviceInterface);
+        values.addPropertyValue("id", beanName);
+        values.addPropertyValue("applicationName", rpcReference.applicationName());
+        definition.setPropertyValues(values);
+        beanFactory.registerBeanDefinition(beanName, definition);
+        return beanFactory.getBean(beanName);
+    }
+
 
 }

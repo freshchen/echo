@@ -1,7 +1,7 @@
 package com.github.freshchen.echo.rpc.transport.netty.handler;
 
 import com.github.freshchen.echo.rpc.common.constant.RpcNettyConstants;
-import com.github.freshchen.echo.rpc.transport.RpcProtocol;
+import com.github.freshchen.echo.rpc.protocol.RpcProtocol;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;

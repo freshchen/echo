@@ -1,6 +1,6 @@
 package com.github.freshchen.echo.demo.server;
 
-import com.github.freshchen.echo.rpc.transport.Server;
+import com.github.freshchen.echo.rpc.transport.netty.server.NettyServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -15,7 +15,7 @@ public class EchoServerApp {
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(EchoServerApp.class);
 
-        Server server = context.getBean(Server.class);
+        NettyServer server = context.getBean(NettyServer.class);
         server.start();
     }
 }

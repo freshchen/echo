@@ -2,8 +2,8 @@ package com.github.freshchen.echo.demo.client.controller;
 
 import com.github.freshchen.echo.demo.api.EchoService;
 import com.github.freshchen.echo.rpc.client.annotation.RpcReference;
-import com.github.freshchen.echo.rpc.transport.Client;
-import com.github.freshchen.echo.rpc.transport.RpcProtocol;
+import com.github.freshchen.echo.rpc.protocol.RpcProtocol;
+import com.github.freshchen.echo.rpc.transport.netty.client.NettyClient;
 import com.github.freshchen.echo.rpc.transport.netty.client.NettyClientChannel;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class EchoController {
 
     @Autowired
-    private Client client;
+    private NettyClient client;
 
     @RpcReference
     private EchoService echoService;

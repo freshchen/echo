@@ -1,7 +1,6 @@
 package com.github.freshchen.echo.rpc.config;
 
-import com.github.freshchen.echo.rpc.client.RpcReferenceHandler;
-import com.github.freshchen.echo.rpc.transport.Client;
+import com.github.freshchen.echo.rpc.client.annotation.RpcReferencePostProcessor;
 import com.github.freshchen.echo.rpc.transport.netty.client.NettyClient;
 import lombok.Data;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -17,29 +16,25 @@ import org.springframework.context.annotation.Configuration;
  **/
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "rpc.client.enabled", havingValue = "true", matchIfMissing = true)
+@EnableConfigurationProperties(RpcClientConfiguration.Config.class)
 public class RpcClientConfiguration {
 
     @Bean
-    public RpcReferenceHandler rpcReferenceHandler() {
-        return new RpcReferenceHandler();
+    public RpcReferencePostProcessor rpcReferencePostProcessor() {
+        return new RpcReferencePostProcessor();
     }
 
-    @ConditionalOnProperty(value = "rpc.client.impl", havingValue = "netty", matchIfMissing = true)
-    @EnableConfigurationProperties(NettyClientConfiguration.Config.class)
-    public static class NettyClientConfiguration {
-
-        @Bean
-        @ConditionalOnMissingBean
-        public Client nettyClient(Config config) {
-            return new NettyClient(config);
-        }
-
-        @Data
-        @ConfigurationProperties(prefix = "rpc.client.netty.config")
-        public static class Config {
-            private Integer workerThreadNumber;
-        }
-
+    @Bean
+    @ConditionalOnMissingBean
+    public NettyClient nettyClient(Config config) {
+        return new NettyClient(config);
     }
+
+    @Data
+    @ConfigurationProperties(prefix = "rpc.client.netty.config")
+    public static class Config {
+        private Integer workerThreadNumber;
+    }
+
 
 }

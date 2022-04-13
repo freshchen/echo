@@ -2,7 +2,6 @@ package com.github.freshchen.echo.rpc.transport.netty.client;
 
 import com.github.freshchen.echo.rpc.common.util.ReadUtils;
 import com.github.freshchen.echo.rpc.config.RpcClientConfiguration;
-import com.github.freshchen.echo.rpc.transport.Client;
 import com.github.freshchen.echo.rpc.transport.netty.handler.InboundExceptionHandler;
 import com.github.freshchen.echo.rpc.transport.netty.handler.OutboundExceptionHandler;
 import com.github.freshchen.echo.rpc.transport.netty.handler.RpcDecoder;
@@ -28,20 +27,19 @@ import static com.github.freshchen.echo.rpc.common.constant.RpcNettyConstants.DE
  **/
 @Slf4j
 @NoArgsConstructor
-public class NettyClient implements Client {
+public class NettyClient {
 
     private static AtomicBoolean started = new AtomicBoolean(false);
 
-    private RpcClientConfiguration.NettyClientConfiguration.Config config;
+    private RpcClientConfiguration.Config config;
 
     private EventLoopGroup workerGroup;
     private Bootstrap clientBootstrap;
 
-    public NettyClient(RpcClientConfiguration.NettyClientConfiguration.Config config) {
+    public NettyClient(RpcClientConfiguration.Config config) {
         this.config = config;
     }
 
-    @Override
     public NettyClientChannel connect(String host, int port) {
         if (started.compareAndSet(false, true)) {
             int workerThreadNumber = ReadUtils

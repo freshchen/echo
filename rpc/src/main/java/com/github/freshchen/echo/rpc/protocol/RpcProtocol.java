@@ -1,4 +1,4 @@
-package com.github.freshchen.echo.rpc.transport;
+package com.github.freshchen.echo.rpc.protocol;
 
 import lombok.Builder;
 import lombok.Getter;

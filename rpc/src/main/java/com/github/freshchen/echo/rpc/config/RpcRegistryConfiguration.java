@@ -4,7 +4,6 @@ import com.github.freshchen.echo.rpc.registry.Registry;
 import com.github.freshchen.echo.rpc.registry.mock.MockRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,7 +16,6 @@ import org.springframework.context.annotation.Configuration;
 public class RpcRegistryConfiguration {
 
     @ConditionalOnProperty(value = "rpc.registry.impl", havingValue = "mock")
-    @EnableConfigurationProperties(RpcClientConfiguration.NettyClientConfiguration.Config.class)
     public static class NettyClientConfiguration {
 
         @Bean

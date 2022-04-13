@@ -2,7 +2,6 @@ package com.github.freshchen.echo.rpc.transport.netty.server;
 
 import com.github.freshchen.echo.rpc.common.util.ReadUtils;
 import com.github.freshchen.echo.rpc.config.RpcServerConfiguration;
-import com.github.freshchen.echo.rpc.transport.Server;
 import com.github.freshchen.echo.rpc.transport.netty.handler.InboundExceptionHandler;
 import com.github.freshchen.echo.rpc.transport.netty.handler.OutboundExceptionHandler;
 import com.github.freshchen.echo.rpc.transport.netty.handler.RpcDecoder;
@@ -26,31 +25,27 @@ import static com.github.freshchen.echo.rpc.common.constant.RpcNettyConstants.DE
  * @since 2022/04/09
  **/
 @Slf4j
-public class NettyServer implements Server {
+public class NettyServer {
 
     private static AtomicBoolean started = new AtomicBoolean(false);
 
-    private final RpcServerConfiguration.NettyServerConfiguration.Config config;
-    private final RpcServerConfiguration.Config serverConfig;
+    private final RpcServerConfiguration.Config config;
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ServerBootstrap serverBootstrap;
     private Channel serverChannel;
 
-    public NettyServer(RpcServerConfiguration.NettyServerConfiguration.Config config,
-                       RpcServerConfiguration.Config serverConfig) {
+    public NettyServer(RpcServerConfiguration.Config config) {
         this.config = config;
-        this.serverConfig = serverConfig;
     }
 
-    @Override
     public boolean start() {
         if (started.compareAndSet(false, true)) {
             int workerThreadNumber = ReadUtils
                     .getOrDefault(config.getWorkerThreadNumber(), DEFAULT_WORKER_THREAD_NUMBER);
             int bossIoRatio = ReadUtils.getOrDefault(config.getBossIoRatio(), 50);
-            int port = ReadUtils.getOrDefault(serverConfig.getPort(), 8800);
+            int port = ReadUtils.getOrDefault(config.getPort(), 8800);
 
             bossGroup = Objects.nonNull(bossGroup) ? bossGroup : new NioEventLoopGroup(1);
             ((NioEventLoopGroup) bossGroup).setIoRatio(bossIoRatio);
