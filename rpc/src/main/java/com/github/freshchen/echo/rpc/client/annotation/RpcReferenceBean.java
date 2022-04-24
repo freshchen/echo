@@ -1,8 +1,6 @@
 package com.github.freshchen.echo.rpc.client.annotation;
 
 import com.github.freshchen.echo.rpc.client.RpcReferenceProxy;
-import com.github.freshchen.echo.rpc.common.util.ProxyFactory;
-import com.github.freshchen.echo.rpc.registry.Registry;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.BeanFactory;
@@ -19,7 +17,8 @@ import org.springframework.beans.factory.InitializingBean;
 public class RpcReferenceBean implements FactoryBean, InitializingBean, BeanFactoryAware {
 
     private Class<?> interfaceClass;
-    private String id;
+    private String beanName;
+    private String serviceName;
     private String applicationName;
     private BeanFactory beanFactory;
 
@@ -27,10 +26,9 @@ public class RpcReferenceBean implements FactoryBean, InitializingBean, BeanFact
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        Registry registry = beanFactory.getBean(Registry.class);
-        this.serviceProxy = ProxyFactory.createProxy(interfaceClass, RpcReferenceProxy.createRpcReferenceProxy(
-                id, interfaceClass, applicationName, registry
-        ));
+        this.serviceProxy = RpcReferenceProxy.createRpcReferenceProxy(
+                serviceName, interfaceClass, applicationName, beanFactory
+        );
     }
 
     @Override

@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+option java_package = "com.github.freshchen.echo.rpc.protocol";
+
+message Package {
+  ReqMeta reqMeta = 1;
+  RespMeta respMeta = 2;
+  int64 correlation_id = 3;
+  string application_name = 4;
+  int32 data_size = 5;
+  repeated Data data = 6;
+}
+
+message ReqMeta {
+  string service_name = 1;
+  string method_name = 2;
+}
+
+message RespMeta {
+  bool success = 1;
+  int32 code = 2;
+  string error_text = 3;
+}
+
+enum DataSerializeType {
+  PB = 0;
+  JSON = 1;
+  INT = 2;
+  LONG = 3;
+  FLOAT = 4;
+  DOUBLE = 5;
+  STRING = 6;
+  BOOLEAN = 7;
+}
+
+message Data {
+  DataSerializeType type = 1;
+  bytes pb_data = 2;
+  bytes json_data = 3;
+  int32 int_data = 4;
+  int64 long_data = 5;
+  float float_data = 6;
+  double double_data = 7;
+  string string_data = 8;
+  bool  boolean_data = 9;
+}

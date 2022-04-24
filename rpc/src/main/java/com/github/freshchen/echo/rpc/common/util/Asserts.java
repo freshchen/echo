@@ -37,4 +37,11 @@ public class Asserts {
             throw new RpcException(msg);
         }
     }
+
+    public static void isTrue(boolean value) {
+        if (!value) {
+            throw new RpcException("not expected");
+        }
+    }
+
 }

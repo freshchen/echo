@@ -13,6 +13,7 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RpcConstants {
 
+    public static final String TO_STRING = "toString";
     public static final Set<String> NOT_PROXY_METHOD_SET = new HashSet<>();
 
     static {
@@ -20,7 +21,7 @@ public class RpcConstants {
         NOT_PROXY_METHOD_SET.add("hashCode");
         NOT_PROXY_METHOD_SET.add("equals");
         NOT_PROXY_METHOD_SET.add("clone");
-        NOT_PROXY_METHOD_SET.add("toString");
+        NOT_PROXY_METHOD_SET.add(TO_STRING);
         NOT_PROXY_METHOD_SET.add("notify");
         NOT_PROXY_METHOD_SET.add("notifyAll");
         NOT_PROXY_METHOD_SET.add("wait");

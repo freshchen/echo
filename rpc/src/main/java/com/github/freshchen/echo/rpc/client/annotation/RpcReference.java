@@ -9,7 +9,7 @@ import java.lang.annotation.*;
 @Documented
 public @interface RpcReference {
 
-    String id() default "";
+    String serviceName() default "";
 
     String applicationName() default "";
 

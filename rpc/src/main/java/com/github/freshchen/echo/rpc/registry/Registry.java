@@ -1,5 +1,8 @@
 package com.github.freshchen.echo.rpc.registry;
 
+import com.github.freshchen.echo.rpc.registry.model.ReferenceInfo;
+import com.github.freshchen.echo.rpc.registry.model.ServiceInfo;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -9,9 +12,9 @@ import java.util.Set;
  **/
 public interface Registry {
 
-    ServiceInfo discover(ServiceInfo info);
+    ServiceInfo discover(ReferenceInfo info);
 
-    boolean register(ServiceInfo info);
+    boolean register(ReferenceInfo info);
 
-    Map<ServiceInfo, Boolean> register(Set<ServiceInfo> infos);
+    Map<ReferenceInfo, Boolean> register(Set<ReferenceInfo> infos);
 }

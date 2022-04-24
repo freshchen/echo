@@ -2,10 +2,8 @@ package com.github.freshchen.echo.rpc.transport.netty.server;
 
 import com.github.freshchen.echo.rpc.common.util.ReadUtils;
 import com.github.freshchen.echo.rpc.config.RpcServerConfiguration;
-import com.github.freshchen.echo.rpc.transport.netty.handler.InboundExceptionHandler;
-import com.github.freshchen.echo.rpc.transport.netty.handler.OutboundExceptionHandler;
-import com.github.freshchen.echo.rpc.transport.netty.handler.RpcDecoder;
-import com.github.freshchen.echo.rpc.transport.netty.handler.RpcEncoder;
+import com.github.freshchen.echo.rpc.server.RpcServiceHandler;
+import com.github.freshchen.echo.rpc.transport.netty.handler.*;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
@@ -30,14 +28,17 @@ public class NettyServer {
     private static AtomicBoolean started = new AtomicBoolean(false);
 
     private final RpcServerConfiguration.Config config;
+    private final RpcServiceHandler rpcServiceHandler;
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ServerBootstrap serverBootstrap;
     private Channel serverChannel;
 
-    public NettyServer(RpcServerConfiguration.Config config) {
+    public NettyServer(RpcServerConfiguration.Config config,
+                       RpcServiceHandler rpcServiceHandler) {
         this.config = config;
+        this.rpcServiceHandler = rpcServiceHandler;
     }
 
     public boolean start() {
@@ -52,32 +53,32 @@ public class NettyServer {
             workerGroup = Objects.nonNull(workerGroup) ? workerGroup : new NioEventLoopGroup(workerThreadNumber);
 
             this.serverBootstrap = new ServerBootstrap();
+
+            ChannelInitializer<SocketChannel> serverChannelInitializer = new ChannelInitializer<SocketChannel>() {
+                @Override
+                protected void initChannel(SocketChannel ch) throws Exception {
+                    ChannelPipeline pipeline = ch.pipeline();
+                    pipeline.addLast(OutboundExceptionHandler.INSTANCE);
+                    pipeline.addLast(new RpcDecoder());
+                    pipeline.addLast(new RpcEncoder());
+                    pipeline.addLast(new ServerInboundHandler(rpcServiceHandler));
+                    pipeline.addLast(InboundExceptionHandler.INSTANCE);
+                }
+            };
+
             ChannelFuture channelFuture = serverBootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                     .option(ChannelOption.AUTO_READ, true)
                     .option(ChannelOption.SO_BACKLOG, DEFAULT_SO_BACKLOG)
                     .option(ChannelOption.SO_REUSEADDR, true)
-                    .childHandler(new ServerChannelInitializer())
+                    .childHandler(serverChannelInitializer)
                     .bind(port)
                     .syncUninterruptibly();
             serverChannel = channelFuture.channel();
             log.info("NettyServer is started on port: {}", port);
         }
         return started.get();
-    }
-
-
-    public static class ServerChannelInitializer extends ChannelInitializer<SocketChannel> {
-
-        @Override
-        protected void initChannel(SocketChannel channel) throws Exception {
-            ChannelPipeline pipeline = channel.pipeline();
-            pipeline.addLast(OutboundExceptionHandler.INSTANCE);
-            pipeline.addLast(new RpcDecoder());
-            pipeline.addLast(new RpcEncoder());
-            pipeline.addLast(InboundExceptionHandler.INSTANCE);
-        }
     }
 
 }

@@ -26,8 +26,8 @@ public class RpcServerConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public NettyServer nettyServer(Config config) {
-        return new NettyServer(config);
+    public NettyServer nettyServer(Config config, RpcServiceHandler rpcServiceHandler) {
+        return new NettyServer(config, rpcServiceHandler);
     }
 
     @Data

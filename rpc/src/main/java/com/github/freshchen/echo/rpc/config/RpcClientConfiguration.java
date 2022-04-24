@@ -1,6 +1,7 @@
 package com.github.freshchen.echo.rpc.config;
 
 import com.github.freshchen.echo.rpc.client.annotation.RpcReferencePostProcessor;
+import com.github.freshchen.echo.rpc.protocol.Protocol;
 import com.github.freshchen.echo.rpc.transport.netty.client.NettyClient;
 import lombok.Data;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -30,11 +31,16 @@ public class RpcClientConfiguration {
         return new NettyClient(config);
     }
 
+
+    @Bean
+    public Protocol protocol() {
+        return new Protocol();
+    }
+
     @Data
     @ConfigurationProperties(prefix = "rpc.client.netty.config")
     public static class Config {
         private Integer workerThreadNumber;
     }
-
 
 }

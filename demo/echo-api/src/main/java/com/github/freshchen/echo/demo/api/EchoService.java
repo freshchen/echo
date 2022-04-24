@@ -6,5 +6,5 @@ package com.github.freshchen.echo.demo.api;
  **/
 public interface EchoService {
 
-    String echo(String msg);
+    Object echo(String msg);
 }

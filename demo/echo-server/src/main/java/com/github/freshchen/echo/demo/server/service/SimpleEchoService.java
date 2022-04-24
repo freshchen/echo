@@ -10,7 +10,7 @@ import com.github.freshchen.echo.rpc.server.annotation.RpcService;
 @RpcService
 public class SimpleEchoService implements EchoService {
     @Override
-    public String echo(String msg) {
+    public Object echo(String msg) {
         return msg;
     }
 }

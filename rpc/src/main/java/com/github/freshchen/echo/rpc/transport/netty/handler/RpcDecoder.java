@@ -1,7 +1,8 @@
 package com.github.freshchen.echo.rpc.transport.netty.handler;
 
 import com.github.freshchen.echo.rpc.common.model.RpcException;
-import com.github.freshchen.echo.rpc.protocol.RpcProtocol;
+import com.github.freshchen.echo.rpc.protocol.RpcProto;
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -35,14 +36,16 @@ public class RpcDecoder extends ByteToMessageDecoder {
         short magic = in.readShort();
         if (MAGIC != magic) {
             in.skipBytes(in.readableBytes());
-            throw new RpcException("magic header error: " );
+            throw new RpcException("magic header error: " + magic);
         }
         in.readerIndex(readerIndex + MAGIC_LENGTH);
         int size = in.readInt();
         byte[] data = new byte[size];
         in.readBytes(data);
-        RpcProtocol rpcPacket = RpcProtocol.builder().data(data).build();
-        log.info(rpcPacket.toString());
-        return rpcPacket;
+        try {
+            return RpcProto.Package.parseFrom(data);
+        } catch (InvalidProtocolBufferException e) {
+            throw new RpcException("parse rpc package error", e);
+        }
     }
 }

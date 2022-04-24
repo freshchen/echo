@@ -1,5 +1,6 @@
 package com.github.freshchen.echo.rpc.client.annotation;
 
+import cn.hutool.core.util.StrUtil;
 import com.github.freshchen.echo.rpc.common.model.RpcException;
 import com.github.freshchen.echo.rpc.common.util.Asserts;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static com.github.freshchen.echo.rpc.common.constant.RpcConstants.COLON;
 
 /**
  * @author darcy
@@ -205,9 +204,9 @@ public class RpcReferencePostProcessor implements SmartInstantiationAwareBeanPos
 
     private static String getBeanName(RpcReference rpcReference, Class<?> type) {
         String applicationName = rpcReference.applicationName();
-        String id = rpcReference.id();
-        if (StringUtils.isNoneBlank(applicationName, id)) {
-            return applicationName + COLON + id;
+        String serviceName = rpcReference.serviceName();
+        if (StringUtils.isNoneBlank(applicationName, serviceName)) {
+            return applicationName + StrUtil.upperFirst(serviceName);
         }
         Asserts.isTrue(type.isInterface(), type + " is not a interface");
         return type.getName();
@@ -221,7 +220,8 @@ public class RpcReferencePostProcessor implements SmartInstantiationAwareBeanPos
         String beanName = getBeanName(rpcReference, serviceInterface);
         MutablePropertyValues values = new MutablePropertyValues();
         values.addPropertyValue("interfaceClass", serviceInterface);
-        values.addPropertyValue("id", beanName);
+        values.addPropertyValue("beanName", beanName);
+        values.addPropertyValue("serviceName", rpcReference.serviceName());
         values.addPropertyValue("applicationName", rpcReference.applicationName());
         definition.setPropertyValues(values);
         beanFactory.registerBeanDefinition(beanName, definition);
